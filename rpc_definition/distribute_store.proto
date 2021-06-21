@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option go_package="alexis.torreblanca/.go/src/distribute_store/rpc_definition";
+package rpc_definition;
+
+
+service DistributeStore {
+
+  rpc Get(Key) returns (stream Value) {}
+  rpc Put(Message) returns (Empty){}
+  rpc Append(Message) returns (Empty) {}
+}
+
+message Key {
+  int32 key = 1;
+}
+
+message Value {
+  string value = 1;
+}
+
+message Message {
+  Key key= 1;
+  Value value = 2;
+}
+
+message Empty {}
