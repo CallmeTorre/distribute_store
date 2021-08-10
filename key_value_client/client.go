@@ -1,17 +1,13 @@
 package main
 
 import (
+	"os"
 	"context"
 	pb "distribute_store/rpc_definition"
-	"flag"
 	"google.golang.org/grpc"
 	"log"
 	"time"
 	"io"
-)
-
-var (
-	serverAddress = flag.String("server_address", "localhost:8000", "The server address in the format of host:port")
 )
 
 func getValue(client pb.DistributeStoreClient, key int32) {
@@ -56,19 +52,22 @@ func putValue(client pb.DistributeStoreClient, key int32, value string) {
 }
 
 func main() {
-	flag.Parse()
-	var opts []grpc.DialOption
-	opts = append(opts, grpc.WithInsecure())
-	opts = append(opts, grpc.WithBlock())
-	conn, err := grpc.Dial(*serverAddress, opts...)
-	if err != nil {
-		log.Fatalf("Fail to connect: %v", err)
+	serverAddresses := os.Args[1:]
+	for _, serverAddress := range serverAddresses{
+		var opts []grpc.DialOption
+		opts = append(opts, grpc.WithInsecure())
+		opts = append(opts, grpc.WithBlock())
+		conn, err := grpc.Dial(serverAddress, opts...)
+		if err != nil {
+			log.Fatalf("Fail to connect: %v", err)
+		}
+		defer conn.Close()
+		client := pb.NewDistributeStoreClient(conn)
+		putValue(client, 1, "1")
+		appendValue(client, 1, "2")
+		putValue(client, 2, "1")
+		getValue(client, 1)
+		getValue(client, 2)
 	}
-	defer conn.Close()
-	client := pb.NewDistributeStoreClient(conn)
-	putValue(client, 1, "1")
-	appendValue(client, 1, "2")
-	putValue(client, 2, "1")
-	getValue(client, 1)
-	getValue(client, 2)
+
 }

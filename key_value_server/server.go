@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+	"strconv"
 	"context"
 	pb "distribute_store/rpc_definition"
-	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -14,7 +15,6 @@ import (
 	)
 
 var (
-	port = flag.Int("port", 8000, "Sever Port")
 	memory = make(map[int32][]string)
 )
 
@@ -66,14 +66,18 @@ func newServer() *keyValueServer {
 }
 
 func main(){
-	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+	port, err := strconv.Atoi(os.Args[1])
+	if err != nil {
+		log.Fatalf("Problem with the port: %v", err)
+	}
+
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterDistributeStoreServer(grpcServer, newServer())
-	log.Printf("Listening on localhost:%d\n", *port)
+	log.Printf("Listening on localhost:%d\n", port)
 	grpcServer.Serve(lis)
 }
